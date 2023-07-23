@@ -1,72 +1,71 @@
 .data
 
 line: .asciiz "-------------------------\n"
-ProgramName: .asciiz "Calculadora de Fatorial\n"
-message: .asciiz "Entre com um numero a ser fatorado: "
-result: .asciiz "Resultado: "
+ProgramName: .asciiz "Factorial Calculator\n"
+message: .asciiz "Enter a number to calculate its factorial: "
+result: .asciiz "Result: "
 
 .text
 
-#codigo 4 para a syscall de printar string
-li $v0, 4 
+# Code 4 for the syscall to print a string
+li $v0, 4
 la $a0, line
-syscall 
-
-li $v0, 4 
-la $a0, ProgramName
-syscall 
-
-li $v0, 4 
-la $a0, line 
-syscall 
-
-li $v0, 4 
-la $a0, message
-syscall 
-
-# codigo 5 para a syscall ler inteiro (read integer)
-li $v0, 5 
 syscall
 
-move $s0, $v0 	# move a entrada do usuario para s0
+li $v0, 4
+la $a0, ProgramName
+syscall
+
+li $v0, 4
+la $a0, line
+syscall
+
+li $v0, 4
+la $a0, message
+syscall
+
+# Code 5 for the syscall to read an integer
+li $v0, 5
+syscall
+
+move $s0, $v0     # Move the user input to s0
 
 li $v0, 4
 la $a0, result
 syscall
-	
-move $a0, $s0 	# move a entrada do usuario pro registrador a0 (vai como argumento pra funcao fatorialCalc)
+
+move $a0, $s0     # Move the user input to the a0 register (passing it as an argument to the fatorialCalc function)
 jal fatorialCalc
 
 move $a0, $v0
-li $v0, 1 	# syscall pra printar um inteiro
+li $v0, 1       # Syscall to print an integer
 syscall
 
-li $v0, 10 	#syscall pro exit
+li $v0, 10      # Syscall for exit
 syscall
 
 fatorialCalc:
-	sub $sp, $sp, 8 	# libera espaço na stack de 2 bytes, 2*4 = 8 
-	sw $ra, 4($sp)		# salva o endereço de retorno
-	sw $a0, 0($sp)		# salva o endereço do argumento
-	
-	# seria tipo um if (argumento <  1 ) retorna 1 ; senao vai pro else
-	slti $t0, $a0, 1	# (argumento < 1) ? t0 = 1 ; t0 = 0
-	beq $t0, $zero, else	# se t0 == 0 vai pro else, senao continua
-	
-	li $v0, 1 		# salva 1 em v0 para retornar 
-	add $sp, $sp,8 		# desaloca o espaço na pilha 
-	jr $ra 			# retorna 
-	
-else: 
-	sub $a0, $a0, 1 	# subtrai 1 do argumento (n - 1)
-	jal fatorialCalc 	#chama a funcao e atuliza endereço de retorno pra proxima instruçao dessa "funcao"
+    sub $sp, $sp, 8     # Allocate space on the stack (2*4 = 8 bytes)
+    sw $ra, 4($sp)      # Save the return address
+    sw $a0, 0($sp)      # Save the argument (n) address
 
-	# ponto de retorno da funcao recursiva
-	lw $a0, 0($sp) 		# recupera o argumento passsado que foi salvo na pilha
-	lw $ra, 4($sp)		# recupera o endereco de retorno que tambem tinha sido salvo na pilha
-	add $sp, $sp, 8		# desaloca o espaço na pilha
-	
-	mul $v0, $a0, $v0	# multiplica o n(argumento) * fatorialCalc(n -1)
-	jr $ra			
-	
+    # Check if the argument (n) is less than 1
+    slti $t0, $a0, 1    # (argument < 1) ? t0 = 1 : t0 = 0
+    beq $t0, $zero, else    # If t0 == 0, go to "else" (argument >= 1), otherwise continue
+
+    li $v0, 1       # Save 1 in v0 to return 1 (base case)
+    add $sp, $sp, 8     # Deallocate space on the stack
+    jr $ra         # Return
+
+else:
+    sub $a0, $a0, 1     # Subtract 1 from the argument (n - 1)
+    jal fatorialCalc     # Call the function recursively with (n - 1) and update the return address to the next instruction of this "function"
+
+    # Return point of the recursive function call
+    lw $a0, 0($sp)      # Restore the argument passed, which was saved on the stack
+    lw $ra, 4($sp)      # Restore the return address, which was also saved on the stack
+    add $sp, $sp, 8     # Deallocate space on the stack
+
+    mul $v0, $a0, $v0   # Multiply n (argument) by fatorialCalc(n - 1)
+    jr $ra             
 
